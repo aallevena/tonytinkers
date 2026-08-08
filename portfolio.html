@@ -1,0 +1,387 @@
+<title>Tony Tinkers — Project Log</title>
+<style>
+  :root{
+    --paper:#EDEAE0;
+    --paper-raised:#F6F4EC;
+    --ink:#1E211C;
+    --ink-soft:#54574C;
+    --accent:#1F6E78;
+    --accent-soft:#DCE9E8;
+    --copper:#B5622E;
+    --line:#CBC6B5;
+    --line-strong:#a9a48f;
+    --radius:2px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#14181A;
+      --paper-raised:#1B2023;
+      --ink:#E8E6DC;
+      --ink-soft:#A5A99C;
+      --accent:#5BC2CC;
+      --accent-soft:#1E3436;
+      --copper:#E0975E;
+      --line:#2A2F31;
+      --line-strong:#3B4245;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181A;
+    --paper-raised:#1B2023;
+    --ink:#E8E6DC;
+    --ink-soft:#A5A99C;
+    --accent:#5BC2CC;
+    --accent-soft:#1E3436;
+    --copper:#E0975E;
+    --line:#2A2F31;
+    --line-strong:#3B4245;
+  }
+  :root[data-theme="light"]{
+    --paper:#EDEAE0;
+    --paper-raised:#F6F4EC;
+    --ink:#1E211C;
+    --ink-soft:#54574C;
+    --accent:#1F6E78;
+    --accent-soft:#DCE9E8;
+    --copper:#B5622E;
+    --line:#CBC6B5;
+    --line-strong:#a9a48f;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:
+      linear-gradient(var(--paper), var(--paper)),
+      repeating-linear-gradient(0deg, transparent, transparent 31px, var(--line) 31px, var(--line) 32px),
+      repeating-linear-gradient(90deg, transparent, transparent 31px, var(--line) 31px, var(--line) 32px);
+    background-blend-mode: normal;
+    opacity:1;
+    color:var(--ink);
+    font-family: ui-sans-serif, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 31px, var(--line) 31px, var(--line) 32px),
+      repeating-linear-gradient(90deg, transparent, transparent 31px, var(--line) 31px, var(--line) 32px);
+    opacity:0.35;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .wrap{ position:relative; z-index:1; max-width:920px; margin:0 auto; padding:56px 28px 80px; }
+
+  .mono{ font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace; }
+
+  .eyebrow{
+    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-size:12.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+
+  header.site{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    border-bottom:1.5px solid var(--ink);
+    padding-bottom:22px;
+    margin-bottom:10px;
+  }
+  .nameplate{
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size:clamp(34px, 5.5vw, 50px);
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin:0;
+    text-wrap:balance;
+  }
+  .nameplate span{ color:var(--accent); font-style:italic; }
+  .site-meta{
+    text-align:right;
+    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.7;
+    white-space:nowrap;
+  }
+
+  .intro{
+    max-width:62ch;
+    margin:26px 0 54px;
+    font-size:17.5px;
+    color:var(--ink-soft);
+  }
+  .intro strong{ color:var(--ink); font-weight:600; }
+
+  .section-label{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:0 0 22px;
+  }
+  .section-label .eyebrow{ white-space:nowrap; }
+  .section-label .rule{ height:1px; background:var(--line-strong); flex:1; }
+
+  .sheets{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:26px;
+  }
+
+  .sheet{
+    position:relative;
+    background:var(--paper-raised);
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius);
+    padding:28px 30px 26px;
+  }
+  .sheet::before, .sheet::after,
+  .sheet .tick-tr, .sheet .tick-bl{
+    content:"";
+    position:absolute;
+    width:11px; height:11px;
+    border-color:var(--line-strong);
+  }
+  .sheet::before{ top:-1px; left:-1px; border-top:1.5px solid var(--ink-soft); border-left:1.5px solid var(--ink-soft); }
+  .sheet::after{ bottom:-1px; right:-1px; border-bottom:1.5px solid var(--ink-soft); border-right:1.5px solid var(--ink-soft); }
+
+  .sheet-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    margin-bottom:6px;
+  }
+  .sheet-id{ font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace; font-size:12px; color:var(--ink-soft); }
+
+  .status{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--accent);
+    border:1px solid var(--accent);
+    border-radius:20px;
+    padding:3px 10px 3px 8px;
+  }
+  .status .dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 0 2px var(--accent-soft);
+  }
+
+  .proj-title{
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size:28px;
+    font-weight:600;
+    margin:2px 0 4px;
+  }
+  .proj-tagline{
+    color:var(--ink-soft);
+    font-size:15.5px;
+    max-width:56ch;
+    margin:0 0 18px;
+  }
+
+  .proj-url{
+    display:inline-block;
+    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-size:13px;
+    color:var(--copper);
+    text-decoration:none;
+    border-bottom:1px solid transparent;
+    margin-bottom:20px;
+  }
+  .proj-url:hover{ border-bottom-color:var(--copper); }
+  .proj-url:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:1px; }
+
+  .proj-body{
+    display:grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap:24px 32px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+  }
+  @media (max-width: 620px){
+    .proj-body{ grid-template-columns:1fr; }
+  }
+
+  .col-label{
+    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:0 0 10px;
+  }
+
+  ul.features{ list-style:none; margin:0; padding:0; }
+  ul.features li{
+    position:relative;
+    padding-left:16px;
+    margin-bottom:9px;
+    font-size:14.5px;
+  }
+  ul.features li::before{
+    content:"–";
+    position:absolute; left:0; top:0;
+    color:var(--copper);
+  }
+
+  .stack-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:20px; }
+  .chip{
+    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    border:1px solid var(--line-strong);
+    border-radius:20px;
+    padding:3px 10px;
+  }
+
+  .note{
+    background:var(--accent-soft);
+    border-left:2px solid var(--accent);
+    padding:10px 13px;
+    font-size:13px;
+    color:var(--ink);
+  }
+  .note b{ color:var(--accent); font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; display:block; margin-bottom:5px; }
+
+  footer{
+    margin-top:60px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  footer a{ color:var(--ink-soft); }
+</style>
+
+<div class="wrap">
+
+  <header class="site">
+    <h1 class="nameplate">Tony <span>Tinkers</span></h1>
+    <div class="site-meta">
+      tonytinkers.com<br>
+      workshop log — updated 2026-08
+    </div>
+  </header>
+
+  <p class="intro">
+    A running log of the things I build on the side — mostly small, purpose-built
+    apps for me and the people around me. <strong>No portfolio-speak, no case studies</strong> —
+    just what's live, what it does, and what's still on the bench.
+  </p>
+
+  <div class="section-label">
+    <span class="eyebrow">Current builds</span>
+    <span class="rule"></span>
+  </div>
+
+  <div class="sheets">
+
+    <!-- FROSTHAVEN -->
+    <div class="sheet">
+      <div class="sheet-top">
+        <span class="sheet-id mono">SHEET 01 / CAMPAIGN TOOL</span>
+        <span class="status"><span class="dot"></span>Live</span>
+      </div>
+      <h2 class="proj-title">Frosthaven Journal</h2>
+      <p class="proj-tagline">
+        A scrapbook-style companion for our Frosthaven board game campaign — a timeline of what
+        happened, and a tavern view of where the party stands right now, both built off the same
+        event log.
+      </p>
+      <a class="proj-url" href="https://frosthaven.tonytinkers.com" target="_blank" rel="noopener">frosthaven.tonytinkers.com &nearr;</a>
+
+      <div class="proj-body">
+        <div>
+          <p class="col-label">What it does</p>
+          <ul class="features">
+            <li>Timeline &amp; journal of scenarios completed, characters retired, buildings built, and town events — filterable by character or scenario</li>
+            <li>The Tavern: a live snapshot of buildings, unlocked/completed scenarios, prosperity, and the roster, editable directly or derived from logged events</li>
+            <li>PDF export of the journal as a keepsake, filterable by date range or character</li>
+            <li>One shared party passphrase — no individual accounts to manage</li>
+          </ul>
+        </div>
+        <div>
+          <p class="col-label">Built with</p>
+          <div class="stack-chips">
+            <span class="chip">Next.js</span>
+            <span class="chip">Supabase</span>
+            <span class="chip">Postgres</span>
+            <span class="chip">Puppeteer</span>
+          </div>
+          <div class="note">
+            <b>On the bench</b>
+            Preview-environment env vars aren't set up yet — fine for now since everything ships straight to production off <span class="mono">main</span>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOALTRACKER -->
+    <div class="sheet">
+      <div class="sheet-top">
+        <span class="sheet-id mono">SHEET 02 / PERSONAL TOOL</span>
+        <span class="status"><span class="dot"></span>Live</span>
+      </div>
+      <h2 class="proj-title">Goal Tracker</h2>
+      <p class="proj-tagline">
+        Weekly and monthly goal tracking for me and Kevin — a GitHub-contributions-style heatmap
+        of what actually got done, plus an API so my other agents can read and log goals directly.
+      </p>
+      <a class="proj-url" href="https://goals.tonytinkers.com" target="_blank" rel="noopener">goals.tonytinkers.com &nearr;</a>
+
+      <div class="proj-body">
+        <div>
+          <p class="col-label">What it does</p>
+          <ul class="features">
+            <li>Success heatmap and tag breakdown across weekly, monthly, and time-bounded goals</li>
+            <li>Per-user API keys so AI agents can create and read goals alongside the browser session</li>
+            <li>Google OAuth sign-in, restricted to an email allowlist — just the two of us for now</li>
+            <li>Full goal API: create, update, delete, and pull stats by tag or time window</li>
+          </ul>
+        </div>
+        <div>
+          <p class="col-label">Built with</p>
+          <div class="stack-chips">
+            <span class="chip">Next.js</span>
+            <span class="chip">Prisma</span>
+            <span class="chip">Postgres</span>
+            <span class="chip">Auth.js</span>
+            <span class="chip">Recharts</span>
+          </div>
+          <div class="note">
+            <b>On the bench</b>
+            CSV export is next, so historical goals from the old doc can be imported and checked against it.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>Built &amp; maintained by Tony</span>
+    <span>Next stop: a personal bucket in Goal Tracker, and PDF export verified live for Frosthaven</span>
+  </footer>
+
+</div>
