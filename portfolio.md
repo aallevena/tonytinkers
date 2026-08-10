@@ -1,6 +1,6 @@
 ---
 site: tonytinkers.com
-updated: 2026-08-08
+updated: 2026-08-10
 ---
 
 # Site intro
@@ -48,6 +48,26 @@ Next.js, Prisma, Postgres, Auth.js, Recharts
 
 ## On the bench
 CSV export is next, so historical goals from the old doc can be imported and checked against it.
+
+---
+
+# The Hunt
+
+- **Status:** Live
+- **URL:** https://thehunt.tonytinkers.com
+- **Tagline:** A location-based scavenger hunt platform — browse, play, and create hunts made of clues tied to a place and a way to verify you found it.
+
+## What it does
+- Browse and search public hunts, filterable by tag and sortable by upvotes or recency
+- Play ordered hunts (solve a clue to unlock the next) or unordered hunts (any order), verified by password or geolocation
+- Create, edit, and publish your own hunts and clues once signed in
+- Google sign-in, upvotes, and a profile of hunts completed, in progress, and created
+
+## Built with
+Next.js, Prisma, Postgres, Auth.js
+
+## On the bench
+QR/barcode and photo-match clues, live shared events with a leaderboard, and badges are designed into the data model but deferred to phase 2.
 
 ---
 
