@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .paper{ fill:#EDEAE0; }
+    .frame{ stroke:#a9a48f; }
+    .ink{ fill:#1E211C; }
+    .copper{ fill:#B5622E; }
+    @media (prefers-color-scheme: dark){
+      .paper{ fill:#14181A; }
+      .frame{ stroke:#3B4245; }
+      .ink{ fill:#E8E6DC; }
+      .copper{ fill:#E0975E; }
+    }
+  </style>
+  <rect width="32" height="32" class="paper"/>
+  <rect x="1.5" y="1.5" width="29" height="29" fill="none" class="frame" stroke-width="1.4"/>
+  <text x="16" y="22.5" text-anchor="middle" font-family="ui-monospace, 'Cascadia Mono', 'SFMono-Regular', Consolas, monospace" font-size="18" font-weight="700" class="ink">T<tspan class="copper">T</tspan></text>
+</svg>
