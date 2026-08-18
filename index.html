@@ -207,6 +207,14 @@
   .proj-url:hover{ border-bottom-color:var(--copper); }
   .proj-url:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:1px; }
 
+  .proj-screenshot{
+    display:block;
+    width:100%;
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius);
+    margin-bottom:20px;
+  }
+
   .proj-body{
     display:grid;
     grid-template-columns: 1.3fr 1fr;
@@ -349,6 +357,8 @@
         of what actually got done, plus an API so my other agents can read and log goals directly.
       </p>
       <a class="proj-url" href="https://goals.tonytinkers.com" target="_blank" rel="noopener">goals.tonytinkers.com &nearr;</a>
+
+      <img class="proj-screenshot" src="images/GoalTrackerScreenshot.png" alt="Goal Tracker dashboard showing goal stats, a success heatmap, goals-by-tag chart, and the goal list">
 
       <div class="proj-body">
         <div>
