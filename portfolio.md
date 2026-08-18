@@ -6,16 +6,15 @@ updated: 2026-08-18
 # Site intro
 
 A running log of the things I build on the side — mostly small, purpose-built
-apps for me and the people around me. No portfolio-speak, no case studies —
-just what's live, what it does, and what's still on the bench.
+apps for me and the people around me. I use github to store my work. https://github.com/aallevena
 
 ---
 
 # Frosthaven Journal
 
-- **Status:** Live
+- **Status:** User Acceptance Testing
 - **URL:** https://frosthaven.tonytinkers.com
-- **Tagline:** A scrapbook-style companion for our Frosthaven board game campaign — a timeline of what happened, and a tavern view of where the party stands right now, both built off the same event log.
+- **Tagline:** A scrapbook-style companion for our Frosthaven board game campaign — a timeline of what happened, and a tavern view of where the party stands, both built off the same event log. The goal is we remember the narrative across multi-week breaks. I imagine I could spin this off to other journalling relevant proejcts.
 
 ## What it does
 - Timeline & journal of scenarios completed, characters retired, buildings built, and town events — filterable by character or scenario
@@ -35,25 +34,25 @@ Preview-environment env vars aren't set up yet — fine for now since everything
 
 - **Status:** Live
 - **URL:** https://goals.tonytinkers.com
-- **Tagline:** Weekly and monthly goal tracking for me and Kevin — a GitHub-contributions-style heatmap of what actually got done, plus an API so my other agents can read and log goals directly.
+- **Tagline:** Weekly and monthly goal tracking — a GitHub-contributions-style heatmap of what actually got done, plus an API so my other agents can read and log goals directly.
 
 ## What it does
 - Success heatmap and tag breakdown across weekly, monthly, and time-bounded goals
-- Per-user API keys so AI agents can create and read goals alongside the browser session
-- Google OAuth sign-in, restricted to an email allowlist — just the two of us for now
+- Per-user API keys so AI agents can create and read goals alongside the browser session. AI-native users never have to use the UX if they don't want to.
+- Google OAuth sign-in, restricted to an email allowlist — invite only experience ;)
 - Full goal API: create, update, delete, and pull stats by tag or time window
 
 ## Built with
 Next.js, Prisma, Postgres, Auth.js, Recharts
 
 ## On the bench
-CSV export is next, so historical goals from the old doc can be imported and checked against it.
+Nothing! I consider this production.
 
 ---
 
 # The Hunt
 
-- **Status:** Live
+- **Status:** Development
 - **URL:** https://thehunt.tonytinkers.com
 - **Tagline:** A location-based scavenger hunt platform — browse, play, and create hunts made of clues tied to a place and a way to verify you found it.
 
@@ -73,14 +72,14 @@ QR/barcode and photo-match clues, live shared events with a leaderboard, and bad
 
 # Timeline
 
-- **Status:** Live
+- **Status:** Development
 - **URL:** https://timeline.tonytinkers.com
 - **Tagline:** A private, invite-only app for logging family events — births, marriages, relocations, jobs — and seeing how everyone's lives line up across time, place, and age.
 
 ## What it does
 - CRUD for people and life events, with flexible date precision (day, month, or year)
 - Chronological timeline view of everyone tracked
-- Age-comparison view for lining up two people's lives side by side
+- Age-comparison view for lining up two people's lives side by side. When did Ben Franklin really hit his stride?
 - Google sign-in with invite-code access control and role-based permissions
 
 ## Built with
@@ -94,7 +93,6 @@ CSV/PDF export, a geographic movement map, relationship cross-paths, progeny tim
 # Footer
 
 - **Left:** Built & maintained by Tony
-- **Right:** Next stop: a personal bucket in Goal Tracker, and PDF export verified live for Frosthaven
 
 <!--
 HOW TO USE THIS FILE:
