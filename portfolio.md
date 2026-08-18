@@ -1,6 +1,6 @@
 ---
 site: tonytinkers.com
-updated: 2026-08-10
+updated: 2026-08-18
 ---
 
 # Site intro
@@ -68,6 +68,26 @@ Next.js, Prisma, Postgres, Auth.js
 
 ## On the bench
 QR/barcode and photo-match clues, live shared events with a leaderboard, and badges are designed into the data model but deferred to phase 2.
+
+---
+
+# Timeline
+
+- **Status:** Live
+- **URL:** https://timeline.tonytinkers.com
+- **Tagline:** A private, invite-only app for logging family events — births, marriages, relocations, jobs — and seeing how everyone's lives line up across time, place, and age.
+
+## What it does
+- CRUD for people and life events, with flexible date precision (day, month, or year)
+- Chronological timeline view of everyone tracked
+- Age-comparison view for lining up two people's lives side by side
+- Google sign-in with invite-code access control and role-based permissions
+
+## Built with
+Next.js, Prisma, Postgres (Supabase), Auth.js
+
+## On the bench
+CSV/PDF export, a geographic movement map, relationship cross-paths, progeny timeline analysis, event photos, and AI-assisted event ingestion.
 
 ---
 
