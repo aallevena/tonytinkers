@@ -132,6 +132,25 @@
     white-space:nowrap;
   }
 
+  .content-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    border:1px solid var(--line-strong);
+    border-radius:20px;
+    padding:2px 9px 2px 8px;
+    margin-top:6px;
+    cursor:default;
+  }
+  .content-badge .dot{ width:5px; height:5px; border-radius:50%; background:var(--ink-soft); }
+  .content-badge.human{ color:var(--accent); border-color:var(--accent); }
+  .content-badge.human .dot{ background:var(--accent); }
+
   .intro{
     max-width:62ch;
     margin:26px 0 54px;
@@ -310,7 +329,8 @@
     </nav>
     <div class="site-meta">
       tonytinkers.com<br>
-      workshop log — updated 2026-08-10
+      workshop log — updated 2026-08-10<br>
+      <span class="content-badge" title="Drafted or edited with AI assistance, reviewed by me."><span class="dot"></span>AI-assisted</span>
     </div>
   </header>
 

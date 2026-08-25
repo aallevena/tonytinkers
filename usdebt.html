@@ -1,0 +1,700 @@
+<title>US Deficit & Debt History — Tony Tinkers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+.site-backlink {
+  display: block;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 18px 20px 0;
+  font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 12.5px;
+}
+.site-backlink a { color: var(--text-muted); text-decoration: none; border-bottom: 1px solid transparent; }
+.site-backlink a:hover { color: var(--text-secondary); border-bottom-color: var(--text-muted); }
+.viz-root {
+  color-scheme: light;
+  --surface-1:      #fcfcfb;
+  --page:           #f9f9f7;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --gridline:       #e1e0d9;
+  --baseline:       #c3c2b7;
+  --border:         rgba(11,11,11,0.10);
+  --series-1:       #2a78d6; /* debt % GDP */
+  --series-2:       #eb6834; /* deficit % GDP */
+  --series-3:       #1baf7a; /* GDP growth */
+  --success:        #006300;
+  --critical:       #e34948;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+    --series-3:       #199e70;
+    --success:        #0ca30c;
+    --critical:       #e66767;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --surface-1:      #1a1a19;
+  --page:           #0d0d0d;
+  --text-primary:   #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted:     #898781;
+  --gridline:       #2c2c2a;
+  --baseline:       #383835;
+  --border:         rgba(255,255,255,0.10);
+  --series-1:       #3987e5;
+  --series-2:       #d95926;
+  --series-3:       #199e70;
+  --success:        #0ca30c;
+  --critical:       #e66767;
+}
+
+.viz-root {
+  background: var(--page);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding: 28px 20px 60px;
+  box-sizing: border-box;
+  min-height: 100%;
+}
+.wrap { max-width: 1080px; margin: 0 auto; }
+h1 { font-size: 1.5rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+.subtitle { color: var(--text-secondary); font-size: 0.92rem; margin: 0 0 24px; max-width: 70ch; line-height: 1.5; }
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 20px 8px;
+  margin-bottom: 20px;
+}
+.card h2 { font-size: 1rem; margin: 0 0 2px; }
+.card .desc { color: var(--text-muted); font-size: 0.8rem; margin: 0 0 12px; }
+
+.legend { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 10px; font-size: 0.8rem; color: var(--text-secondary); }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+
+.chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart-svg text { fill: var(--text-muted); font-size: 10.5px; }
+.chart-svg .axis-line { stroke: var(--baseline); stroke-width: 1; }
+.chart-svg .grid-line { stroke: var(--gridline); stroke-width: 1; }
+.chart-svg .zero-line { stroke: var(--baseline); stroke-width: 1; stroke-dasharray: 2 3; }
+
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  opacity: 0;
+  transition: opacity 0.08s;
+  white-space: nowrap;
+  z-index: 5;
+}
+.tooltip .tt-year { font-weight: 600; color: var(--text-primary); margin-bottom: 2px; display:block; }
+.tooltip .tt-row { display:flex; gap: 8px; justify-content: space-between; }
+.tooltip .tt-dot { width: 8px; height: 8px; border-radius: 50%; display:inline-block; margin-right: 5px; }
+
+.chart-container { position: relative; }
+.crosshair { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; pointer-events: none; }
+
+table.data-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+.table-scroll { max-height: 560px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
+table.data-table thead th {
+  position: sticky; top: 0;
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  text-align: right;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 2;
+}
+table.data-table thead th:first-child { text-align: left; }
+table.data-table td {
+  text-align: right;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--gridline);
+  white-space: nowrap;
+}
+table.data-table td:first-child { text-align: left; color: var(--text-primary); font-weight: 500; }
+table.data-table tbody tr:hover { background: color-mix(in srgb, var(--series-1) 7%, transparent); }
+.pos { color: var(--critical); }
+.neg { color: var(--success); }
+.decade-row td { background: color-mix(in srgb, var(--text-muted) 8%, transparent); font-weight: 600; }
+
+.footnote { color: var(--text-muted); font-size: 0.74rem; line-height: 1.6; margin-top: 18px; }
+.footnote a { color: var(--text-muted); }
+
+.controls { display:flex; gap:8px; margin-bottom: 14px; }
+.controls button {
+  font: inherit; font-size: 0.76rem; cursor: pointer;
+  background: transparent; color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: 5px 12px;
+}
+.controls button.active { background: var(--series-1); color: white; border-color: var(--series-1); }
+
+.explainer { font-size: 0.86rem; line-height: 1.65; color: var(--text-secondary); padding-bottom: 14px; }
+.explainer p { margin: 0 0 12px; }
+.explainer strong { color: var(--text-primary); }
+.stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 4px 0 16px; }
+.stat-tile {
+  flex: 1 1 150px;
+  background: color-mix(in srgb, var(--text-muted) 6%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.stat-tile .stat-label { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
+.stat-tile .stat-value { font-size: 1.15rem; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.stat-tile .stat-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+.period-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin: 6px 0 16px; }
+.period-table th { text-align: right; color: var(--text-muted); font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+.period-table th:first-child, .period-table td:first-child { text-align: left; }
+.period-table td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--gridline); font-variant-numeric: tabular-nums; }
+
+.intro-note {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  max-width: 72ch;
+  margin: 0 0 28px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+}
+.intro-note p { margin: 0 0 12px; }
+.intro-note p:last-child { margin-bottom: 0; }
+.intro-note strong { color: var(--text-primary); }
+</style>
+
+<div class="viz-root">
+  <div class="site-backlink"><a href="/bythenumbers">&larr; tonytinkers.com/bythenumbers</a></div>
+  <div class="wrap">
+    <div class="intro-note">
+      <p>I'm hearing a lot about debt lately. Is it a problem? This is my grounding before I listen to the pundits.</p>
+      <p><strong>TL;DR, in three sentences:</strong> US debt is now at 98% of GDP — the second-highest level in 150 years, behind only World War II. The primary driver has been consistent deficit spending since 2000. The second driver is that the US is no longer benefiting from the historically low interest rates that kept the cost of carrying that debt manageable.</p>
+      <p>I also modeled which years the deficit stayed under 3% of GDP — I'm curious about Warren Buffett's "simple" fix for the debt: sitting legislators become ineligible for re-election if the deficit exceeds 3% of GDP in a given year. Either reduce the deficit or grow the economy. See <a href="#rule-chart" style="color:var(--series-2)">the chart below</a>.</p>
+    </div>
+
+    <h1>US Federal Deficit &amp; Debt, 1850&ndash;2025</h1>
+    <p class="subtitle">Federal debt held by the public, and deficit/surplus, as a share of nominal GDP, plus underlying GDP and debt levels, every year since 1850. Pre-1930 GDP from MeasuringWorth (Johnston &amp; Williamson); 1930&ndash;2025 GDP and deficit/surplus from OMB historical budget tables; debt held by the public from FRED/OMB (1939&ndash;2025) and approximated with gross debt outstanding before 1939, when intragovernmental holdings were negligible.</p>
+
+    <div class="card">
+      <h2>Debt held by the public, % of GDP</h2>
+      <p class="desc">Excludes intragovernmental holdings (Social Security trust fund and similar) — the narrower, more commonly cited debt measure. Hover to inspect any year.</p>
+      <div class="legend">
+        <span class="legend-item"><span class="swatch" style="background:var(--series-1)"></span>Debt held by the public, % of GDP</span>
+      </div>
+      <div class="chart-container" id="chart1-container">
+        <svg class="chart-svg" id="chart1" viewBox="0 0 1000 340" preserveAspectRatio="none"></svg>
+        <div class="tooltip" id="tooltip1"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Deficit and nominal GDP growth, % of GDP</h2>
+      <p class="desc">Annual deficit(+)/surplus(&minus;) as a share of GDP, against year-over-year nominal GDP growth. Both are percentages, so they share one axis. Hover to inspect any year.</p>
+      <div class="legend">
+        <span class="legend-item"><span class="swatch" style="background:var(--series-2)"></span>Deficit(+)/Surplus(&minus;), % of GDP</span>
+        <span class="legend-item"><span class="swatch" style="background:var(--series-3)"></span>Nominal GDP growth, YoY %</span>
+      </div>
+      <div class="chart-container" id="chart2-container">
+        <svg class="chart-svg" id="chart2" viewBox="0 0 1000 300" preserveAspectRatio="none"></svg>
+        <div class="tooltip" id="tooltip2"></div>
+      </div>
+    </div>
+
+    <div class="card" id="rule-chart">
+      <h2>The 3% rule: which years would qualify legislators for re-election?</h2>
+      <p class="desc">Every year colored by whether the deficit stayed at or below 3% of GDP (green) or exceeded it (red), against a threshold used in some EU fiscal-rule frameworks. Hover for the exact figure.</p>
+      <div class="legend">
+        <span class="legend-item"><span class="swatch" style="background:var(--success)"></span>Deficit &le; 3% of GDP — eligible</span>
+        <span class="legend-item"><span class="swatch" style="background:var(--critical)"></span>Deficit &gt; 3% of GDP — ineligible</span>
+      </div>
+      <div class="chart-container" id="chart3-container">
+        <svg class="chart-svg" id="chart3" viewBox="0 0 1000 260" preserveAspectRatio="none"></svg>
+        <div class="tooltip" id="tooltip3"></div>
+      </div>
+      <p class="desc" id="rule-stats" style="margin-top:10px;"></p>
+    </div>
+
+    <div class="card">
+      <h2>Why did debt accelerate so much after 2000?</h2>
+      <p class="desc">Deficits in most individual years since 2000 don't look historically extreme — nothing near the WWII peak of 29% of GDP. Debt held by the public still roughly tripled as a share of GDP. A few things are compounding at once.</p>
+      <div id="why-explainer"></div>
+    </div>
+
+    <div class="card">
+      <h2>Full data table</h2>
+      <p class="desc">All 176 years. GDP and debt in nominal $ billions. Debt is held by the public (excludes intragovernmental holdings). Deficit = negative of surplus (positive = deficit spending).</p>
+      <div class="table-scroll">
+        <table class="data-table" id="data-table">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>GDP ($B)</th>
+              <th>GDP growth</th>
+              <th>Debt held by public ($B)</th>
+              <th>Debt, % GDP</th>
+              <th>Debt YoY change</th>
+              <th>Deficit(+)/Surplus(&minus;) ($B)</th>
+              <th>Deficit, % GDP</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <p class="footnote">
+      Sources: debt held by the public as % of GDP, 1939&ndash;2025 — FRED series FYPUGDA188S (Federal Reserve Bank of St. Louis, sourced from OMB Historical Tables 7.1). Debt figures before 1939 are approximated using gross federal debt outstanding (U.S. Treasury Fiscal Data, "Historical Debt Outstanding") — intragovernmental holdings (chiefly the Social Security trust fund) were negligible before the fund began accumulating meaningful reserves, so gross and public debt are close in this period, though not identical. GDP 1790&ndash;1929 and deficit/surplus % of GDP 1850&ndash;2025 — usgovernmentspending.com, compiling OMB Historical Tables, Census Bureau, and Samuel H. Williamson, "What Was the U.S. GDP Then?" MeasuringWorth (2015). GDP 1930&ndash;2025 — OMB/BEA nominal GDP. Figures for years before 1930 are historical reconstructions with wider uncertainty than modern national accounts; fiscal-year conventions changed over time (fiscal year began Jan 1 through 1842, July 1 through 1976, Oct 1 thereafter), so year boundaries are approximate for the 19th century. Dollar-denominated debt figures are derived as (debt % of GDP) &times; GDP using this page's GDP series, which can differ marginally from OMB's own GDP denominator.
+    </p>
+  </div>
+</div>
+
+<script>
+(function() {
+  const data = [{"year":1850,"gdp_billion":2.66,"gdp_growth_pct":null,"debt_billion":0.06,"debt_pct_gdp":2.26,"debt_yoy_pct":null,"deficit_billion":-0.0,"deficit_pct_gdp":-0.16},{"year":1851,"gdp_billion":2.8,"gdp_growth_pct":5.26,"debt_billion":0.07,"debt_pct_gdp":2.5,"debt_yoy_pct":16.67,"deficit_billion":-0.01,"deficit_pct_gdp":-0.18},{"year":1852,"gdp_billion":3.14,"gdp_growth_pct":12.14,"debt_billion":0.07,"debt_pct_gdp":2.23,"debt_yoy_pct":0.0,"deficit_billion":-0.0,"deficit_pct_gdp":-0.12},{"year":1853,"gdp_billion":3.38,"gdp_growth_pct":7.64,"debt_billion":0.06,"debt_pct_gdp":1.78,"debt_yoy_pct":-14.29,"deficit_billion":-0.01,"deficit_pct_gdp":-0.32},{"year":1854,"gdp_billion":3.79,"gdp_growth_pct":12.13,"debt_billion":0.04,"debt_pct_gdp":1.06,"debt_yoy_pct":-33.33,"deficit_billion":-0.01,"deficit_pct_gdp":-0.35},{"year":1855,"gdp_billion":4.05,"gdp_growth_pct":6.86,"debt_billion":0.04,"debt_pct_gdp":0.99,"debt_yoy_pct":0.0,"deficit_billion":-0.0,"deficit_pct_gdp":-0.06},{"year":1856,"gdp_billion":4.1,"gdp_growth_pct":1.23,"debt_billion":0.03,"debt_pct_gdp":0.73,"debt_yoy_pct":-25.0,"deficit_billion":-0.0,"deficit_pct_gdp":-0.02},{"year":1857,"gdp_billion":4.24,"gdp_growth_pct":3.41,"debt_billion":0.03,"debt_pct_gdp":0.71,"debt_yoy_pct":0.0,"deficit_billion":0.0,"deficit_pct_gdp":0.07},{"year":1858,"gdp_billion":4.15,"gdp_growth_pct":-2.12,"debt_billion":0.04,"debt_pct_gdp":0.96,"debt_yoy_pct":33.33,"deficit_billion":0.03,"deficit_pct_gdp":0.79},{"year":1859,"gdp_billion":4.47,"gdp_growth_pct":7.71,"debt_billion":0.06,"debt_pct_gdp":1.34,"debt_yoy_pct":50.0,"deficit_billion":0.02,"deficit_pct_gdp":0.52},{"year":1860,"gdp_billion":4.41,"gdp_growth_pct":-1.34,"debt_billion":0.06,"debt_pct_gdp":1.36,"debt_yoy_pct":0.0,"deficit_billion":0.01,"deficit_pct_gdp":0.3},{"year":1861,"gdp_billion":4.67,"gdp_growth_pct":5.9,"debt_billion":0.09,"debt_pct_gdp":1.93,"debt_yoy_pct":50.0,"deficit_billion":0.03,"deficit_pct_gdp":0.65},{"year":1862,"gdp_billion":5.88,"gdp_growth_pct":25.91,"debt_billion":0.52,"debt_pct_gdp":8.84,"debt_yoy_pct":477.78,"deficit_billion":0.43,"deficit_pct_gdp":7.24},{"year":1863,"gdp_billion":7.75,"gdp_growth_pct":31.8,"debt_billion":1.12,"debt_pct_gdp":14.45,"debt_yoy_pct":115.38,"deficit_billion":0.6,"deficit_pct_gdp":7.77},{"year":1864,"gdp_billion":9.6,"gdp_growth_pct":23.87,"debt_billion":1.82,"debt_pct_gdp":18.96,"debt_yoy_pct":62.5,"deficit_billion":0.6,"deficit_pct_gdp":6.26},{"year":1865,"gdp_billion":10.01,"gdp_growth_pct":4.27,"debt_billion":2.68,"debt_pct_gdp":26.77,"debt_yoy_pct":47.25,"deficit_billion":0.96,"deficit_pct_gdp":9.62},{"year":1866,"gdp_billion":9.1,"gdp_growth_pct":-9.09,"debt_billion":2.77,"debt_pct_gdp":30.44,"debt_yoy_pct":3.36,"deficit_billion":-0.04,"deficit_pct_gdp":-0.4},{"year":1867,"gdp_billion":8.47,"gdp_growth_pct":-6.92,"debt_billion":2.68,"debt_pct_gdp":31.64,"debt_yoy_pct":-3.25,"deficit_billion":-0.13,"deficit_pct_gdp":-1.53},{"year":1868,"gdp_billion":8.26,"gdp_growth_pct":-2.48,"debt_billion":2.61,"debt_pct_gdp":31.6,"debt_yoy_pct":-2.61,"deficit_billion":-0.02,"deficit_pct_gdp":-0.26},{"year":1869,"gdp_billion":8.01,"gdp_growth_pct":-3.03,"debt_billion":2.59,"debt_pct_gdp":32.33,"debt_yoy_pct":-0.77,"deficit_billion":-0.04,"deficit_pct_gdp":-0.52},{"year":1870,"gdp_billion":7.9,"gdp_growth_pct":-1.37,"debt_billion":2.48,"debt_pct_gdp":31.39,"debt_yoy_pct":-4.25,"deficit_billion":-0.1,"deficit_pct_gdp":-1.22},{"year":1871,"gdp_billion":7.75,"gdp_growth_pct":-1.9,"debt_billion":2.35,"debt_pct_gdp":30.32,"debt_yoy_pct":-5.24,"deficit_billion":-0.09,"deficit_pct_gdp":-1.12},{"year":1872,"gdp_billion":8.4,"gdp_growth_pct":8.39,"debt_billion":2.25,"debt_pct_gdp":26.79,"debt_yoy_pct":-4.26,"deficit_billion":-0.09,"deficit_pct_gdp":-1.09},{"year":1873,"gdp_billion":8.94,"gdp_growth_pct":6.43,"debt_billion":2.23,"debt_pct_gdp":24.94,"debt_yoy_pct":-0.89,"deficit_billion":-0.04,"deficit_pct_gdp":-0.42},{"year":1874,"gdp_billion":8.66,"gdp_growth_pct":-3.13,"debt_billion":2.25,"debt_pct_gdp":25.98,"debt_yoy_pct":0.9,"deficit_billion":0.0,"deficit_pct_gdp":0.04},{"year":1875,"gdp_billion":8.33,"gdp_growth_pct":-3.81,"debt_billion":2.23,"debt_pct_gdp":26.77,"debt_yoy_pct":-0.89,"deficit_billion":-0.01,"deficit_pct_gdp":-0.08},{"year":1876,"gdp_billion":8.48,"gdp_growth_pct":1.8,"debt_billion":2.18,"debt_pct_gdp":25.71,"debt_yoy_pct":-2.24,"deficit_billion":-0.02,"deficit_pct_gdp":-0.29},{"year":1877,"gdp_billion":8.7,"gdp_growth_pct":2.59,"debt_billion":2.21,"debt_pct_gdp":25.4,"debt_yoy_pct":1.38,"deficit_billion":-0.03,"deficit_pct_gdp":-0.39},{"year":1878,"gdp_billion":8.55,"gdp_growth_pct":-1.72,"debt_billion":2.26,"debt_pct_gdp":26.43,"debt_yoy_pct":2.26,"deficit_billion":-0.02,"deficit_pct_gdp":-0.19},{"year":1879,"gdp_billion":9.55,"gdp_growth_pct":11.7,"debt_billion":2.35,"debt_pct_gdp":24.61,"debt_yoy_pct":3.98,"deficit_billion":-0.0,"deficit_pct_gdp":-0.04},{"year":1880,"gdp_billion":10.59,"gdp_growth_pct":10.89,"debt_billion":2.12,"debt_pct_gdp":20.02,"debt_yoy_pct":-9.79,"deficit_billion":-0.06,"deficit_pct_gdp":-0.59},{"year":1881,"gdp_billion":11.9,"gdp_growth_pct":12.37,"debt_billion":2.07,"debt_pct_gdp":17.39,"debt_yoy_pct":-2.36,"deficit_billion":-0.1,"deficit_pct_gdp":-0.82},{"year":1882,"gdp_billion":12.52,"gdp_growth_pct":5.21,"debt_billion":1.92,"debt_pct_gdp":15.34,"debt_yoy_pct":-7.25,"deficit_billion":-0.15,"deficit_pct_gdp":-1.17},{"year":1883,"gdp_billion":12.64,"gdp_growth_pct":0.96,"debt_billion":1.88,"debt_pct_gdp":14.87,"debt_yoy_pct":-2.08,"deficit_billion":-0.14,"deficit_pct_gdp":-1.07},{"year":1884,"gdp_billion":12.11,"gdp_growth_pct":-4.19,"debt_billion":1.83,"debt_pct_gdp":15.11,"debt_yoy_pct":-2.66,"deficit_billion":-0.1,"deficit_pct_gdp":-0.83},{"year":1885,"gdp_billion":11.93,"gdp_growth_pct":-1.49,"debt_billion":1.86,"debt_pct_gdp":15.59,"debt_yoy_pct":1.64,"deficit_billion":-0.06,"deficit_pct_gdp":-0.47},{"year":1886,"gdp_billion":12.55,"gdp_growth_pct":5.2,"debt_billion":1.78,"debt_pct_gdp":14.18,"debt_yoy_pct":-4.3,"deficit_billion":-0.09,"deficit_pct_gdp":-0.69},{"year":1887,"gdp_billion":13.57,"gdp_growth_pct":8.13,"debt_billion":1.66,"debt_pct_gdp":12.23,"debt_yoy_pct":-6.74,"deficit_billion":-0.1,"deficit_pct_gdp":-0.73},{"year":1888,"gdp_billion":14.33,"gdp_growth_pct":5.6,"debt_billion":1.69,"debt_pct_gdp":11.79,"debt_yoy_pct":1.81,"deficit_billion":-0.11,"deficit_pct_gdp":-0.75},{"year":1889,"gdp_billion":14.34,"gdp_growth_pct":0.07,"debt_billion":1.62,"debt_pct_gdp":11.3,"debt_yoy_pct":-4.14,"deficit_billion":-0.08,"deficit_pct_gdp":-0.57},{"year":1890,"gdp_billion":15.61,"gdp_growth_pct":8.86,"debt_billion":1.55,"debt_pct_gdp":9.93,"debt_yoy_pct":-4.32,"deficit_billion":-0.08,"deficit_pct_gdp":-0.51},{"year":1891,"gdp_billion":15.94,"gdp_growth_pct":2.11,"debt_billion":1.55,"debt_pct_gdp":9.72,"debt_yoy_pct":0.0,"deficit_billion":-0.02,"deficit_pct_gdp":-0.12},{"year":1892,"gdp_billion":16.92,"gdp_growth_pct":6.15,"debt_billion":1.59,"debt_pct_gdp":9.4,"debt_yoy_pct":2.58,"deficit_billion":-0.0,"deficit_pct_gdp":-0.02},{"year":1893,"gdp_billion":15.93,"gdp_growth_pct":-5.85,"debt_billion":1.55,"debt_pct_gdp":9.73,"debt_yoy_pct":-2.52,"deficit_billion":0.0,"deficit_pct_gdp":0.02},{"year":1894,"gdp_billion":14.61,"gdp_growth_pct":-8.29,"debt_billion":1.63,"debt_pct_gdp":11.16,"debt_yoy_pct":5.16,"deficit_billion":0.07,"deficit_pct_gdp":0.49},{"year":1895,"gdp_billion":16.11,"gdp_growth_pct":10.27,"debt_billion":1.68,"debt_pct_gdp":10.43,"debt_yoy_pct":3.07,"deficit_billion":0.04,"deficit_pct_gdp":0.26},{"year":1896,"gdp_billion":15.99,"gdp_growth_pct":-0.74,"debt_billion":1.77,"debt_pct_gdp":11.07,"debt_yoy_pct":5.36,"deficit_billion":0.02,"deficit_pct_gdp":0.14},{"year":1897,"gdp_billion":16.67,"gdp_growth_pct":4.25,"debt_billion":1.82,"debt_pct_gdp":10.92,"debt_yoy_pct":2.82,"deficit_billion":0.03,"deficit_pct_gdp":0.18},{"year":1898,"gdp_billion":18.66,"gdp_growth_pct":11.94,"debt_billion":1.8,"debt_pct_gdp":9.65,"debt_yoy_pct":-1.1,"deficit_billion":0.05,"deficit_pct_gdp":0.25},{"year":1899,"gdp_billion":20.12,"gdp_growth_pct":7.82,"debt_billion":1.99,"debt_pct_gdp":9.89,"debt_yoy_pct":10.56,"deficit_billion":0.1,"deficit_pct_gdp":0.48},{"year":1900,"gdp_billion":21.2,"gdp_growth_pct":5.37,"debt_billion":2.14,"debt_pct_gdp":10.09,"debt_yoy_pct":7.54,"deficit_billion":-0.04,"deficit_pct_gdp":-0.19},{"year":1901,"gdp_billion":22.93,"gdp_growth_pct":8.16,"debt_billion":2.14,"debt_pct_gdp":9.33,"debt_yoy_pct":0.0,"deficit_billion":-0.06,"deficit_pct_gdp":-0.26},{"year":1902,"gdp_billion":24.75,"gdp_growth_pct":7.94,"debt_billion":2.16,"debt_pct_gdp":8.73,"debt_yoy_pct":0.93,"deficit_billion":-0.08,"deficit_pct_gdp":-0.33},{"year":1903,"gdp_billion":26.65,"gdp_growth_pct":7.68,"debt_billion":2.2,"debt_pct_gdp":8.26,"debt_yoy_pct":1.85,"deficit_billion":-0.06,"deficit_pct_gdp":-0.23},{"year":1904,"gdp_billion":26.36,"gdp_growth_pct":-1.09,"debt_billion":2.26,"debt_pct_gdp":8.57,"debt_yoy_pct":2.73,"deficit_billion":-0.02,"deficit_pct_gdp":-0.06},{"year":1905,"gdp_billion":29.52,"gdp_growth_pct":11.99,"debt_billion":2.27,"debt_pct_gdp":7.69,"debt_yoy_pct":0.44,"deficit_billion":0.0,"deficit_pct_gdp":0.01},{"year":1906,"gdp_billion":31.79,"gdp_growth_pct":7.69,"debt_billion":2.34,"debt_pct_gdp":7.36,"debt_yoy_pct":3.08,"deficit_billion":-0.03,"deficit_pct_gdp":-0.11},{"year":1907,"gdp_billion":34.64,"gdp_growth_pct":8.97,"debt_billion":2.46,"debt_pct_gdp":7.1,"debt_yoy_pct":5.13,"deficit_billion":-0.1,"deficit_pct_gdp":-0.29},{"year":1908,"gdp_billion":30.8,"gdp_growth_pct":-11.09,"debt_billion":2.63,"debt_pct_gdp":8.54,"debt_yoy_pct":6.91,"deficit_billion":0.01,"deficit_pct_gdp":0.02},{"year":1909,"gdp_billion":32.54,"gdp_growth_pct":5.65,"debt_billion":2.64,"debt_pct_gdp":8.11,"debt_yoy_pct":0.38,"deficit_billion":0.03,"deficit_pct_gdp":0.09},{"year":1910,"gdp_billion":33.75,"gdp_growth_pct":3.72,"debt_billion":2.65,"debt_pct_gdp":7.85,"debt_yoy_pct":0.38,"deficit_billion":-0.03,"deficit_pct_gdp":-0.1},{"year":1911,"gdp_billion":34.67,"gdp_growth_pct":2.73,"debt_billion":2.77,"debt_pct_gdp":7.99,"debt_yoy_pct":4.53,"deficit_billion":-0.04,"deficit_pct_gdp":-0.11},{"year":1912,"gdp_billion":37.75,"gdp_growth_pct":8.88,"debt_billion":2.87,"debt_pct_gdp":7.6,"debt_yoy_pct":3.61,"deficit_billion":0.0,"deficit_pct_gdp":0.01},{"year":1913,"gdp_billion":39.52,"gdp_growth_pct":4.69,"debt_billion":2.92,"debt_pct_gdp":7.39,"debt_yoy_pct":1.74,"deficit_billion":0.01,"deficit_pct_gdp":0.02},{"year":1914,"gdp_billion":36.83,"gdp_growth_pct":-6.81,"debt_billion":2.91,"debt_pct_gdp":7.9,"debt_yoy_pct":-0.34,"deficit_billion":0.07,"deficit_pct_gdp":0.2},{"year":1915,"gdp_billion":39.05,"gdp_growth_pct":6.03,"debt_billion":3.06,"debt_pct_gdp":7.84,"debt_yoy_pct":5.15,"deficit_billion":0.21,"deficit_pct_gdp":0.55},{"year":1916,"gdp_billion":50.12,"gdp_growth_pct":28.35,"debt_billion":3.61,"debt_pct_gdp":7.2,"debt_yoy_pct":17.97,"deficit_billion":0.16,"deficit_pct_gdp":0.31},{"year":1917,"gdp_billion":60.28,"gdp_growth_pct":20.27,"debt_billion":5.72,"debt_pct_gdp":9.49,"debt_yoy_pct":58.45,"deficit_billion":1.09,"deficit_pct_gdp":1.8},{"year":1918,"gdp_billion":76.57,"gdp_growth_pct":27.02,"debt_billion":14.59,"debt_pct_gdp":19.05,"debt_yoy_pct":155.07,"deficit_billion":9.0,"deficit_pct_gdp":11.75},{"year":1919,"gdp_billion":79.09,"gdp_growth_pct":3.29,"debt_billion":27.39,"debt_pct_gdp":34.63,"debt_yoy_pct":87.73,"deficit_billion":13.16,"deficit_pct_gdp":16.64},{"year":1920,"gdp_billion":89.25,"gdp_growth_pct":12.85,"debt_billion":25.95,"debt_pct_gdp":29.08,"debt_yoy_pct":-5.26,"deficit_billion":-0.6,"deficit_pct_gdp":-0.67},{"year":1921,"gdp_billion":74.31,"gdp_growth_pct":-16.74,"debt_billion":23.98,"debt_pct_gdp":32.27,"debt_yoy_pct":-7.59,"deficit_billion":-0.68,"deficit_pct_gdp":-0.91},{"year":1922,"gdp_billion":74.14,"gdp_growth_pct":-0.23,"debt_billion":22.96,"debt_pct_gdp":30.97,"debt_yoy_pct":-4.25,"deficit_billion":-0.5,"deficit_pct_gdp":-0.67},{"year":1923,"gdp_billion":86.24,"gdp_growth_pct":16.32,"debt_billion":22.35,"debt_pct_gdp":25.92,"debt_yoy_pct":-2.66,"deficit_billion":-0.56,"deficit_pct_gdp":-0.65},{"year":1924,"gdp_billion":87.79,"gdp_growth_pct":1.8,"debt_billion":21.25,"debt_pct_gdp":24.21,"debt_yoy_pct":-4.92,"deficit_billion":-0.63,"deficit_pct_gdp":-0.72},{"year":1925,"gdp_billion":91.45,"gdp_growth_pct":4.17,"debt_billion":20.52,"debt_pct_gdp":22.44,"debt_yoy_pct":-3.44,"deficit_billion":-0.42,"deficit_pct_gdp":-0.46},{"year":1926,"gdp_billion":97.88,"gdp_growth_pct":7.03,"debt_billion":19.64,"debt_pct_gdp":20.07,"debt_yoy_pct":-4.29,"deficit_billion":-0.65,"deficit_pct_gdp":-0.66},{"year":1927,"gdp_billion":96.47,"gdp_growth_pct":-1.44,"debt_billion":18.51,"debt_pct_gdp":19.19,"debt_yoy_pct":-5.75,"deficit_billion":-0.94,"deficit_pct_gdp":-0.97},{"year":1928,"gdp_billion":98.3,"gdp_growth_pct":1.9,"debt_billion":17.6,"debt_pct_gdp":17.9,"debt_yoy_pct":-4.92,"deficit_billion":-0.66,"deficit_pct_gdp":-0.67},{"year":1929,"gdp_billion":104.56,"gdp_growth_pct":6.37,"debt_billion":16.93,"debt_pct_gdp":16.19,"debt_yoy_pct":-3.81,"deficit_billion":-0.48,"deficit_pct_gdp":-0.46},{"year":1930,"gdp_billion":92.16,"gdp_growth_pct":-11.86,"debt_billion":16.19,"debt_pct_gdp":17.57,"debt_yoy_pct":-4.37,"deficit_billion":-0.88,"deficit_pct_gdp":-0.95},{"year":1931,"gdp_billion":77.39,"gdp_growth_pct":-16.03,"debt_billion":16.8,"debt_pct_gdp":21.71,"debt_yoy_pct":3.77,"deficit_billion":0.13,"deficit_pct_gdp":0.17},{"year":1932,"gdp_billion":59.52,"gdp_growth_pct":-23.09,"debt_billion":19.49,"debt_pct_gdp":32.75,"debt_yoy_pct":16.01,"deficit_billion":1.63,"deficit_pct_gdp":2.74},{"year":1933,"gdp_billion":57.15,"gdp_growth_pct":-3.98,"debt_billion":22.54,"debt_pct_gdp":39.44,"debt_yoy_pct":15.65,"deficit_billion":1.85,"deficit_pct_gdp":3.23},{"year":1934,"gdp_billion":66.8,"gdp_growth_pct":16.89,"debt_billion":27.05,"debt_pct_gdp":40.49,"debt_yoy_pct":20.01,"deficit_billion":2.06,"deficit_pct_gdp":3.08},{"year":1935,"gdp_billion":74.24,"gdp_growth_pct":11.14,"debt_billion":28.7,"debt_pct_gdp":38.66,"debt_yoy_pct":6.1,"deficit_billion":3.02,"deficit_pct_gdp":4.07},{"year":1936,"gdp_billion":84.83,"gdp_growth_pct":14.26,"debt_billion":33.78,"debt_pct_gdp":39.82,"debt_yoy_pct":17.7,"deficit_billion":3.99,"deficit_pct_gdp":4.7},{"year":1937,"gdp_billion":93.0,"gdp_growth_pct":9.63,"debt_billion":36.42,"debt_pct_gdp":39.16,"debt_yoy_pct":7.82,"deficit_billion":2.6,"deficit_pct_gdp":2.8},{"year":1938,"gdp_billion":87.35,"gdp_growth_pct":-6.08,"debt_billion":37.16,"debt_pct_gdp":42.54,"debt_yoy_pct":2.03,"deficit_billion":1.22,"deficit_pct_gdp":1.4},{"year":1939,"gdp_billion":93.44,"gdp_growth_pct":6.97,"debt_billion":41.4,"debt_pct_gdp":44.31,"debt_yoy_pct":11.41,"deficit_billion":2.14,"deficit_pct_gdp":2.29},{"year":1940,"gdp_billion":102.9,"gdp_growth_pct":10.12,"debt_billion":42.8,"debt_pct_gdp":41.59,"debt_yoy_pct":3.38,"deficit_billion":3.51,"deficit_pct_gdp":3.41},{"year":1941,"gdp_billion":129.31,"gdp_growth_pct":25.67,"debt_billion":48.2,"debt_pct_gdp":37.28,"debt_yoy_pct":12.62,"deficit_billion":5.44,"deficit_pct_gdp":4.21},{"year":1942,"gdp_billion":165.95,"gdp_growth_pct":28.34,"debt_billion":67.8,"debt_pct_gdp":40.86,"debt_yoy_pct":40.66,"deficit_billion":20.91,"deficit_pct_gdp":12.6},{"year":1943,"gdp_billion":203.08,"gdp_growth_pct":22.37,"debt_billion":127.8,"debt_pct_gdp":62.93,"debt_yoy_pct":88.49,"deficit_billion":58.97,"deficit_pct_gdp":29.04},{"year":1944,"gdp_billion":224.45,"gdp_growth_pct":10.52,"debt_billion":184.8,"debt_pct_gdp":82.34,"debt_yoy_pct":44.61,"deficit_billion":56.76,"deficit_pct_gdp":25.29},{"year":1945,"gdp_billion":228.01,"gdp_growth_pct":1.59,"debt_billion":235.2,"debt_pct_gdp":103.15,"debt_yoy_pct":27.27,"deficit_billion":61.72,"deficit_pct_gdp":27.07},{"year":1946,"gdp_billion":227.53,"gdp_growth_pct":-0.21,"debt_billion":241.89,"debt_pct_gdp":106.31,"debt_yoy_pct":2.85,"deficit_billion":27.24,"deficit_pct_gdp":11.97},{"year":1947,"gdp_billion":249.62,"gdp_growth_pct":9.71,"debt_billion":224.3,"debt_pct_gdp":89.86,"debt_yoy_pct":-7.27,"deficit_billion":2.9,"deficit_pct_gdp":1.16},{"year":1948,"gdp_billion":274.47,"gdp_growth_pct":9.96,"debt_billion":216.3,"debt_pct_gdp":78.81,"debt_yoy_pct":-3.57,"deficit_billion":-5.96,"deficit_pct_gdp":-2.17},{"year":1949,"gdp_billion":272.48,"gdp_growth_pct":-0.73,"debt_billion":214.3,"debt_pct_gdp":78.65,"debt_yoy_pct":-0.92,"deficit_billion":0.79,"deficit_pct_gdp":0.29},{"year":1950,"gdp_billion":299.83,"gdp_growth_pct":10.04,"debt_billion":219.0,"debt_pct_gdp":73.04,"debt_yoy_pct":2.19,"deficit_billion":5.37,"deficit_pct_gdp":1.79},{"year":1951,"gdp_billion":346.91,"gdp_growth_pct":15.7,"debt_billion":214.3,"debt_pct_gdp":61.77,"debt_yoy_pct":-2.15,"deficit_billion":-2.67,"deficit_pct_gdp":-0.77},{"year":1952,"gdp_billion":367.34,"gdp_growth_pct":5.89,"debt_billion":214.8,"debt_pct_gdp":58.47,"debt_yoy_pct":0.23,"deficit_billion":5.4,"deficit_pct_gdp":1.47},{"year":1953,"gdp_billion":389.22,"gdp_growth_pct":5.96,"debt_billion":218.4,"debt_pct_gdp":56.11,"debt_yoy_pct":1.68,"deficit_billion":10.39,"deficit_pct_gdp":2.67},{"year":1954,"gdp_billion":390.55,"gdp_growth_pct":0.34,"debt_billion":224.5,"debt_pct_gdp":57.48,"debt_yoy_pct":2.79,"deficit_billion":8.01,"deficit_pct_gdp":2.05},{"year":1955,"gdp_billion":425.48,"gdp_growth_pct":8.94,"debt_billion":226.6,"debt_pct_gdp":53.26,"debt_yoy_pct":0.94,"deficit_billion":8.0,"deficit_pct_gdp":1.88},{"year":1956,"gdp_billion":449.35,"gdp_growth_pct":5.61,"debt_billion":222.2,"debt_pct_gdp":49.45,"debt_yoy_pct":-1.94,"deficit_billion":1.39,"deficit_pct_gdp":0.31},{"year":1957,"gdp_billion":474.04,"gdp_growth_pct":5.49,"debt_billion":219.3,"debt_pct_gdp":46.26,"debt_yoy_pct":-1.3,"deficit_billion":1.8,"deficit_pct_gdp":0.38},{"year":1958,"gdp_billion":481.23,"gdp_growth_pct":1.52,"debt_billion":226.3,"debt_pct_gdp":47.03,"debt_yoy_pct":3.19,"deficit_billion":6.4,"deficit_pct_gdp":1.33},{"year":1959,"gdp_billion":521.65,"gdp_growth_pct":8.4,"debt_billion":234.7,"debt_pct_gdp":44.99,"debt_yoy_pct":3.71,"deficit_billion":14.29,"deficit_pct_gdp":2.74},{"year":1960,"gdp_billion":542.38,"gdp_growth_pct":3.97,"debt_billion":236.8,"debt_pct_gdp":43.66,"debt_yoy_pct":0.9,"deficit_billion":4.77,"deficit_pct_gdp":0.88},{"year":1961,"gdp_billion":562.21,"gdp_growth_pct":3.66,"debt_billion":238.4,"debt_pct_gdp":42.4,"debt_yoy_pct":0.68,"deficit_billion":10.46,"deficit_pct_gdp":1.86},{"year":1962,"gdp_billion":603.92,"gdp_growth_pct":7.42,"debt_billion":248.0,"debt_pct_gdp":41.06,"debt_yoy_pct":4.03,"deficit_billion":7.13,"deficit_pct_gdp":1.18},{"year":1963,"gdp_billion":637.45,"gdp_growth_pct":5.55,"debt_billion":254.0,"debt_pct_gdp":39.85,"debt_yoy_pct":2.42,"deficit_billion":4.78,"deficit_pct_gdp":0.75},{"year":1964,"gdp_billion":684.46,"gdp_growth_pct":7.37,"debt_billion":256.8,"debt_pct_gdp":37.52,"debt_yoy_pct":1.1,"deficit_billion":5.89,"deficit_pct_gdp":0.86},{"year":1965,"gdp_billion":742.29,"gdp_growth_pct":8.45,"debt_billion":260.8,"debt_pct_gdp":35.13,"debt_yoy_pct":1.56,"deficit_billion":1.41,"deficit_pct_gdp":0.19},{"year":1966,"gdp_billion":813.41,"gdp_growth_pct":9.58,"debt_billion":263.7,"debt_pct_gdp":32.42,"debt_yoy_pct":1.11,"deficit_billion":3.66,"deficit_pct_gdp":0.45},{"year":1967,"gdp_billion":859.96,"gdp_growth_pct":5.72,"debt_billion":266.6,"debt_pct_gdp":31.0,"debt_yoy_pct":1.1,"deficit_billion":8.6,"deficit_pct_gdp":1.0},{"year":1968,"gdp_billion":940.65,"gdp_growth_pct":9.38,"debt_billion":289.5,"debt_pct_gdp":30.78,"debt_yoy_pct":8.59,"deficit_billion":25.12,"deficit_pct_gdp":2.67},{"year":1969,"gdp_billion":1017.62,"gdp_growth_pct":8.18,"debt_billion":278.1,"debt_pct_gdp":27.33,"debt_yoy_pct":-3.94,"deficit_billion":-3.26,"deficit_pct_gdp":-0.32},{"year":1970,"gdp_billion":1073.3,"gdp_growth_pct":5.47,"debt_billion":283.2,"debt_pct_gdp":26.39,"debt_yoy_pct":1.83,"deficit_billion":2.79,"deficit_pct_gdp":0.26},{"year":1971,"gdp_billion":1164.85,"gdp_growth_pct":8.53,"debt_billion":303.0,"debt_pct_gdp":26.01,"debt_yoy_pct":6.99,"deficit_billion":23.06,"deficit_pct_gdp":1.98},{"year":1972,"gdp_billion":1279.11,"gdp_growth_pct":9.81,"debt_billion":322.4,"debt_pct_gdp":25.21,"debt_yoy_pct":6.4,"deficit_billion":23.41,"deficit_pct_gdp":1.83},{"year":1973,"gdp_billion":1425.38,"gdp_growth_pct":11.44,"debt_billion":340.9,"debt_pct_gdp":23.92,"debt_yoy_pct":5.74,"deficit_billion":14.97,"deficit_pct_gdp":1.05},{"year":1974,"gdp_billion":1545.24,"gdp_growth_pct":8.41,"debt_billion":343.7,"debt_pct_gdp":22.24,"debt_yoy_pct":0.82,"deficit_billion":6.18,"deficit_pct_gdp":0.4},{"year":1975,"gdp_billion":1684.9,"gdp_growth_pct":9.04,"debt_billion":394.7,"debt_pct_gdp":23.43,"debt_yoy_pct":14.84,"deficit_billion":53.24,"deficit_pct_gdp":3.16},{"year":1976,"gdp_billion":1873.41,"gdp_growth_pct":11.19,"debt_billion":477.4,"debt_pct_gdp":25.48,"debt_yoy_pct":20.95,"deficit_billion":73.81,"deficit_pct_gdp":3.94},{"year":1977,"gdp_billion":2081.83,"gdp_growth_pct":11.13,"debt_billion":549.1,"debt_pct_gdp":26.38,"debt_yoy_pct":15.02,"deficit_billion":53.71,"deficit_pct_gdp":2.58},{"year":1978,"gdp_billion":2351.6,"gdp_growth_pct":12.96,"debt_billion":607.1,"debt_pct_gdp":25.82,"debt_yoy_pct":10.56,"deficit_billion":59.26,"deficit_pct_gdp":2.52},{"year":1979,"gdp_billion":2627.33,"gdp_growth_pct":11.73,"debt_billion":640.3,"debt_pct_gdp":24.37,"debt_yoy_pct":5.47,"deficit_billion":40.72,"deficit_pct_gdp":1.55},{"year":1980,"gdp_billion":2857.31,"gdp_growth_pct":8.75,"debt_billion":711.9,"debt_pct_gdp":24.92,"debt_yoy_pct":11.18,"deficit_billion":73.72,"deficit_pct_gdp":2.58},{"year":1981,"gdp_billion":3207.04,"gdp_growth_pct":12.24,"debt_billion":789.4,"debt_pct_gdp":24.61,"debt_yoy_pct":10.89,"deficit_billion":78.89,"deficit_pct_gdp":2.46},{"year":1982,"gdp_billion":3343.79,"gdp_growth_pct":4.26,"debt_billion":924.6,"debt_pct_gdp":27.65,"debt_yoy_pct":17.13,"deficit_billion":128.07,"deficit_pct_gdp":3.83},{"year":1983,"gdp_billion":3634.04,"gdp_growth_pct":8.68,"debt_billion":1137.3,"debt_pct_gdp":31.3,"debt_yoy_pct":23.0,"deficit_billion":207.87,"deficit_pct_gdp":5.72},{"year":1984,"gdp_billion":4037.61,"gdp_growth_pct":11.11,"debt_billion":1307.0,"debt_pct_gdp":32.37,"debt_yoy_pct":14.92,"deficit_billion":185.33,"deficit_pct_gdp":4.59},{"year":1985,"gdp_billion":4338.98,"gdp_growth_pct":7.46,"debt_billion":1507.3,"debt_pct_gdp":34.74,"debt_yoy_pct":15.33,"deficit_billion":212.18,"deficit_pct_gdp":4.89},{"year":1986,"gdp_billion":4579.63,"gdp_growth_pct":5.55,"debt_billion":1740.6,"debt_pct_gdp":38.01,"debt_yoy_pct":15.48,"deficit_billion":221.2,"deficit_pct_gdp":4.83},{"year":1987,"gdp_billion":4855.22,"gdp_growth_pct":6.02,"debt_billion":1889.8,"debt_pct_gdp":38.92,"debt_yoy_pct":8.57,"deficit_billion":149.54,"deficit_pct_gdp":3.08},{"year":1988,"gdp_billion":5236.44,"gdp_growth_pct":7.85,"debt_billion":2051.6,"debt_pct_gdp":39.18,"debt_yoy_pct":8.56,"deficit_billion":155.0,"deficit_pct_gdp":2.96},{"year":1989,"gdp_billion":5641.58,"gdp_growth_pct":7.74,"debt_billion":2190.7,"debt_pct_gdp":38.83,"debt_yoy_pct":6.78,"deficit_billion":152.89,"deficit_pct_gdp":2.71},{"year":1990,"gdp_billion":5963.14,"gdp_growth_pct":5.7,"debt_billion":2411.6,"debt_pct_gdp":40.44,"debt_yoy_pct":10.08,"deficit_billion":221.23,"deficit_pct_gdp":3.71},{"year":1991,"gdp_billion":6158.13,"gdp_growth_pct":3.27,"debt_billion":2689.0,"debt_pct_gdp":43.67,"debt_yoy_pct":11.5,"deficit_billion":269.11,"deficit_pct_gdp":4.37},{"year":1992,"gdp_billion":6520.33,"gdp_growth_pct":5.88,"debt_billion":2999.7,"debt_pct_gdp":46.01,"debt_yoy_pct":11.55,"deficit_billion":290.15,"deficit_pct_gdp":4.45},{"year":1993,"gdp_billion":6858.56,"gdp_growth_pct":5.19,"debt_billion":3248.4,"debt_pct_gdp":47.36,"debt_yoy_pct":8.29,"deficit_billion":255.14,"deficit_pct_gdp":3.72},{"year":1994,"gdp_billion":7287.24,"gdp_growth_pct":6.25,"debt_billion":3433.1,"debt_pct_gdp":47.11,"debt_yoy_pct":5.69,"deficit_billion":203.31,"deficit_pct_gdp":2.79},{"year":1995,"gdp_billion":7639.75,"gdp_growth_pct":4.84,"debt_billion":3604.4,"debt_pct_gdp":47.18,"debt_yoy_pct":4.99,"deficit_billion":164.25,"deficit_pct_gdp":2.15},{"year":1996,"gdp_billion":8073.12,"gdp_growth_pct":5.67,"debt_billion":3734.1,"debt_pct_gdp":46.25,"debt_yoy_pct":3.6,"deficit_billion":107.37,"deficit_pct_gdp":1.33},{"year":1997,"gdp_billion":8577.55,"gdp_growth_pct":6.25,"debt_billion":3772.3,"debt_pct_gdp":43.98,"debt_yoy_pct":1.02,"deficit_billion":22.3,"deficit_pct_gdp":0.26},{"year":1998,"gdp_billion":9062.82,"gdp_growth_pct":5.66,"debt_billion":3721.1,"debt_pct_gdp":41.06,"debt_yoy_pct":-1.36,"deficit_billion":-68.88,"deficit_pct_gdp":-0.76},{"year":1999,"gdp_billion":9631.17,"gdp_growth_pct":6.27,"debt_billion":3632.4,"debt_pct_gdp":37.72,"debt_yoy_pct":-2.38,"deficit_billion":-125.21,"deficit_pct_gdp":-1.3},{"year":2000,"gdp_billion":10251.0,"gdp_growth_pct":6.44,"debt_billion":3409.82,"debt_pct_gdp":33.26,"debt_yoy_pct":-6.13,"deficit_billion":-235.77,"deficit_pct_gdp":-2.3},{"year":2001,"gdp_billion":10581.9,"gdp_growth_pct":3.23,"debt_billion":3319.59,"debt_pct_gdp":31.37,"debt_yoy_pct":-2.65,"deficit_billion":-128.04,"deficit_pct_gdp":-1.21},{"year":2002,"gdp_billion":10929.1,"gdp_growth_pct":3.28,"debt_billion":3540.4,"debt_pct_gdp":32.39,"debt_yoy_pct":6.65,"deficit_billion":157.38,"deficit_pct_gdp":1.44},{"year":2003,"gdp_billion":11456.4,"gdp_growth_pct":4.82,"debt_billion":3913.38,"debt_pct_gdp":34.16,"debt_yoy_pct":10.54,"deficit_billion":378.06,"deficit_pct_gdp":3.3},{"year":2004,"gdp_billion":12217.2,"gdp_growth_pct":6.64,"debt_billion":4295.5,"debt_pct_gdp":35.16,"debt_yoy_pct":9.76,"deficit_billion":412.94,"deficit_pct_gdp":3.38},{"year":2005,"gdp_billion":13039.2,"gdp_growth_pct":6.73,"debt_billion":4592.2,"debt_pct_gdp":35.22,"debt_yoy_pct":6.91,"deficit_billion":318.16,"deficit_pct_gdp":2.44},{"year":2006,"gdp_billion":13815.6,"gdp_growth_pct":5.95,"debt_billion":4829.01,"debt_pct_gdp":34.95,"debt_yoy_pct":5.16,"deficit_billion":248.68,"deficit_pct_gdp":1.8},{"year":2007,"gdp_billion":14474.2,"gdp_growth_pct":4.77,"debt_billion":5035.09,"debt_pct_gdp":34.79,"debt_yoy_pct":4.27,"deficit_billion":160.66,"deficit_pct_gdp":1.11},{"year":2008,"gdp_billion":14769.9,"gdp_growth_pct":2.04,"debt_billion":5803.11,"debt_pct_gdp":39.29,"debt_yoy_pct":15.25,"deficit_billion":457.87,"deficit_pct_gdp":3.1},{"year":2009,"gdp_billion":14478.1,"gdp_growth_pct":-1.98,"debt_billion":7544.72,"debt_pct_gdp":52.11,"debt_yoy_pct":30.01,"deficit_billion":1413.06,"deficit_pct_gdp":9.76},{"year":2010,"gdp_billion":15049.0,"gdp_growth_pct":3.94,"debt_billion":9018.92,"debt_pct_gdp":59.93,"debt_yoy_pct":19.54,"deficit_billion":1294.21,"deficit_pct_gdp":8.6},{"year":2011,"gdp_billion":15599.7,"gdp_growth_pct":3.66,"debt_billion":10128.18,"debt_pct_gdp":64.93,"debt_yoy_pct":12.3,"deficit_billion":1299.46,"deficit_pct_gdp":8.33},{"year":2012,"gdp_billion":16254.0,"gdp_growth_pct":4.19,"debt_billion":11281.12,"debt_pct_gdp":69.41,"debt_yoy_pct":11.38,"deficit_billion":1076.01,"deficit_pct_gdp":6.62},{"year":2013,"gdp_billion":16880.7,"gdp_growth_pct":3.86,"debt_billion":11982.71,"debt_pct_gdp":70.98,"debt_yoy_pct":6.22,"deficit_billion":680.29,"deficit_pct_gdp":4.03},{"year":2014,"gdp_billion":17608.1,"gdp_growth_pct":4.31,"debt_billion":12779.87,"debt_pct_gdp":72.58,"debt_yoy_pct":6.65,"deficit_billion":484.22,"deficit_pct_gdp":2.75},{"year":2015,"gdp_billion":18295.0,"gdp_growth_pct":3.9,"debt_billion":13116.69,"debt_pct_gdp":71.7,"debt_yoy_pct":2.64,"deficit_billion":442.74,"deficit_pct_gdp":2.42},{"year":2016,"gdp_billion":18804.9,"gdp_growth_pct":2.79,"debt_billion":14167.59,"debt_pct_gdp":75.34,"debt_yoy_pct":8.01,"deficit_billion":584.83,"deficit_pct_gdp":3.11},{"year":2017,"gdp_billion":19612.1,"gdp_growth_pct":4.29,"debt_billion":14665.4,"debt_pct_gdp":74.78,"debt_yoy_pct":3.51,"deficit_billion":664.85,"deficit_pct_gdp":3.39},{"year":2018,"gdp_billion":20656.5,"gdp_growth_pct":5.33,"debt_billion":15749.59,"debt_pct_gdp":76.25,"debt_yoy_pct":7.39,"deficit_billion":778.75,"deficit_pct_gdp":3.77},{"year":2019,"gdp_billion":21540.0,"gdp_growth_pct":4.28,"debt_billion":16800.71,"debt_pct_gdp":78.0,"debt_yoy_pct":6.67,"deficit_billion":984.38,"deficit_pct_gdp":4.57},{"year":2020,"gdp_billion":21375.3,"gdp_growth_pct":-0.76,"debt_billion":21016.72,"debt_pct_gdp":98.32,"debt_yoy_pct":25.09,"deficit_billion":3095.14,"deficit_pct_gdp":14.48},{"year":2021,"gdp_billion":23725.6,"gdp_growth_pct":11.0,"debt_billion":22283.96,"debt_pct_gdp":93.92,"debt_yoy_pct":6.03,"deficit_billion":2773.52,"deficit_pct_gdp":11.69},{"year":2022,"gdp_billion":26054.6,"gdp_growth_pct":9.82,"debt_billion":24253.39,"debt_pct_gdp":93.09,"debt_yoy_pct":8.84,"deficit_billion":1373.08,"deficit_pct_gdp":5.27},{"year":2023,"gdp_billion":27811.5,"gdp_growth_pct":6.74,"debt_billion":26235.58,"debt_pct_gdp":94.33,"debt_yoy_pct":8.17,"deficit_billion":1688.16,"deficit_pct_gdp":6.07},{"year":2024,"gdp_billion":29298.0,"gdp_growth_pct":5.34,"debt_billion":28193.89,"debt_pct_gdp":96.23,"debt_yoy_pct":7.46,"deficit_billion":1816.48,"deficit_pct_gdp":6.2},{"year":2025,"gdp_billion":30767.1,"gdp_growth_pct":5.01,"debt_billion":30172.1,"debt_pct_gdp":98.07,"debt_yoy_pct":7.02,"deficit_billion":1775.26,"deficit_pct_gdp":5.77}];
+
+  const root = document.currentScript.previousElementSibling;
+
+  function isDark() {
+    const el = document.documentElement;
+    if (el.getAttribute('data-theme') === 'dark') return true;
+    if (el.getAttribute('data-theme') === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function cssVar(name) {
+    return getComputedStyle(document.querySelector('.viz-root')).getPropertyValue(name).trim();
+  }
+
+  // shared helper: build an M/L path, breaking on null values
+  function pathFor(vals, xScale, yScale) {
+    let d = '';
+    let started = false;
+    vals.forEach((v, i) => {
+      if (v === null || v === undefined) { started = false; return; }
+      d += `${started ? 'L' : 'M'}${xScale(i).toFixed(2)},${yScale(v).toFixed(2)} `;
+      started = true;
+    });
+    return d;
+  }
+
+  // ---------- Chart 1: Debt held by the public, % of GDP ----------
+  function buildChart1() {
+    const svg = document.getElementById('chart1');
+    const tooltip = document.getElementById('tooltip1');
+    const W = 1000, H = 340;
+    const marginL = 46, marginR = 16, marginT = 16, marginB = 30;
+    const plotW = W - marginL - marginR;
+    const plotH = H - marginT - marginB;
+
+    const years = data.map(d => d.year);
+    const debtVals = data.map(d => d.debt_pct_gdp);
+    const yMin = 0;
+    const yMax = Math.max(...debtVals) + 8;
+
+    const xScale = i => marginL + (i / (years.length - 1)) * plotW;
+    const yScale = v => marginT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+    let svgContent = '';
+
+    const step = 20;
+    for (let v = 0; v <= yMax; v += step) {
+      const y = yScale(v);
+      svgContent += `<line class="grid-line" x1="${marginL}" x2="${W - marginR}" y1="${y}" y2="${y}"></line>`;
+      svgContent += `<text x="${marginL - 8}" y="${y + 3}" text-anchor="end">${v}%</text>`;
+    }
+
+    for (let i = 0; i < years.length; i++) {
+      if (years[i] % 25 === 0) {
+        const x = xScale(i);
+        svgContent += `<line class="grid-line" x1="${x}" x2="${x}" y1="${marginT}" y2="${H - marginB}"></line>`;
+        svgContent += `<text x="${x}" y="${H - marginB + 16}" text-anchor="middle">${years[i]}</text>`;
+      }
+    }
+    svgContent += `<line class="axis-line" x1="${marginL}" x2="${W - marginR}" y1="${H - marginB}" y2="${H - marginB}"></line>`;
+    svgContent += `<path d="${pathFor(debtVals, xScale, yScale)}" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round"></path>`;
+
+    svg.innerHTML = svgContent + `<line id="ch1-crosshair" class="crosshair" x1="0" x2="0" y1="${marginT}" y2="${H - marginB}"></line>
+      <circle id="ch1-dot1" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="1.5" opacity="0"></circle>`;
+
+    const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    overlay.setAttribute('x', marginL); overlay.setAttribute('y', marginT);
+    overlay.setAttribute('width', plotW); overlay.setAttribute('height', plotH);
+    overlay.setAttribute('fill', 'transparent');
+    svg.appendChild(overlay);
+
+    const crosshair = document.getElementById('ch1-crosshair');
+    const dot1 = document.getElementById('ch1-dot1');
+    const container = document.getElementById('chart1-container');
+
+    function handleMove(evt) {
+      const rect = svg.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const relX = (clientX - rect.left) / rect.width * W;
+      let i = Math.round((relX - marginL) / plotW * (years.length - 1));
+      i = Math.max(0, Math.min(years.length - 1, i));
+      const x = xScale(i);
+      crosshair.setAttribute('x1', x); crosshair.setAttribute('x2', x); crosshair.setAttribute('opacity', 1);
+      dot1.setAttribute('cx', x); dot1.setAttribute('cy', yScale(debtVals[i])); dot1.setAttribute('opacity', 1);
+
+      const d = data[i];
+      tooltip.innerHTML = `<span class="tt-year">${d.year}</span>
+        <div class="tt-row"><span><span class="tt-dot" style="background:var(--series-1)"></span>Debt (public)</span><span>${d.debt_pct_gdp.toFixed(1)}% GDP</span></div>`;
+      tooltip.style.opacity = 1;
+      const cw = container.clientWidth;
+      const px = (x / W) * cw;
+      let left = px + 14;
+      if (left + 150 > cw) left = px - 150;
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = '4px';
+    }
+    function handleLeave() {
+      crosshair.setAttribute('opacity', 0);
+      dot1.setAttribute('opacity', 0);
+      tooltip.style.opacity = 0;
+    }
+    overlay.addEventListener('mousemove', handleMove);
+    overlay.addEventListener('mouseleave', handleLeave);
+    overlay.addEventListener('touchmove', handleMove);
+    overlay.addEventListener('touchend', handleLeave);
+  }
+
+  // ---------- Chart 2: Deficit %GDP + GDP growth %GDP ----------
+  function buildChart2() {
+    const svg = document.getElementById('chart2');
+    const tooltip = document.getElementById('tooltip2');
+    const W = 1000, H = 300;
+    const marginL = 46, marginR = 16, marginT = 16, marginB = 30;
+    const plotW = W - marginL - marginR;
+    const plotH = H - marginT - marginB;
+
+    const years = data.map(d => d.year);
+    const defVals = data.map(d => d.deficit_pct_gdp);
+    const growthVals = data.map(d => d.gdp_growth_pct);
+    const growthValsClean = growthVals.filter(v => v !== null);
+    const yMin = Math.min(0, Math.min(...defVals), Math.min(...growthValsClean)) - 3;
+    const yMax = Math.max(Math.max(...defVals), Math.max(...growthValsClean)) + 6;
+
+    const xScale = i => marginL + (i / (years.length - 1)) * plotW;
+    const yScale = v => marginT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+    let svgContent = '';
+    const step = 10;
+    for (let v = Math.ceil(yMin / step) * step; v <= yMax; v += step) {
+      const y = yScale(v);
+      svgContent += `<line class="grid-line" x1="${marginL}" x2="${W - marginR}" y1="${y}" y2="${y}"></line>`;
+      svgContent += `<text x="${marginL - 8}" y="${y + 3}" text-anchor="end">${v}%</text>`;
+    }
+    const zy = yScale(0);
+    svgContent += `<line class="zero-line" x1="${marginL}" x2="${W - marginR}" y1="${zy}" y2="${zy}"></line>`;
+
+    for (let i = 0; i < years.length; i++) {
+      if (years[i] % 25 === 0) {
+        const x = xScale(i);
+        svgContent += `<line class="grid-line" x1="${x}" x2="${x}" y1="${marginT}" y2="${H - marginB}"></line>`;
+        svgContent += `<text x="${x}" y="${H - marginB + 16}" text-anchor="middle">${years[i]}</text>`;
+      }
+    }
+    svgContent += `<line class="axis-line" x1="${marginL}" x2="${W - marginR}" y1="${H - marginB}" y2="${H - marginB}"></line>`;
+
+    svgContent += `<path d="${pathFor(growthVals, xScale, yScale)}" fill="none" stroke="var(--series-3)" stroke-width="1.5" stroke-linejoin="round" opacity="0.85"></path>`;
+    svgContent += `<path d="${pathFor(defVals, xScale, yScale)}" fill="none" stroke="var(--series-2)" stroke-width="2" stroke-linejoin="round"></path>`;
+
+    svg.innerHTML = svgContent + `<line id="ch2-crosshair" class="crosshair" x1="0" x2="0" y1="${marginT}" y2="${H - marginB}"></line>
+      <circle id="ch2-dot3" r="3.5" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="1.5" opacity="0"></circle>
+      <circle id="ch2-dot2" r="4" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="1.5" opacity="0"></circle>`;
+
+    const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    overlay.setAttribute('x', marginL); overlay.setAttribute('y', marginT);
+    overlay.setAttribute('width', plotW); overlay.setAttribute('height', plotH);
+    overlay.setAttribute('fill', 'transparent');
+    svg.appendChild(overlay);
+
+    const crosshair = document.getElementById('ch2-crosshair');
+    const dot2 = document.getElementById('ch2-dot2');
+    const dot3 = document.getElementById('ch2-dot3');
+    const container = document.getElementById('chart2-container');
+
+    function handleMove(evt) {
+      const rect = svg.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const relX = (clientX - rect.left) / rect.width * W;
+      let i = Math.round((relX - marginL) / plotW * (years.length - 1));
+      i = Math.max(0, Math.min(years.length - 1, i));
+      const x = xScale(i);
+      crosshair.setAttribute('x1', x); crosshair.setAttribute('x2', x); crosshair.setAttribute('opacity', 1);
+      dot2.setAttribute('cx', x); dot2.setAttribute('cy', yScale(defVals[i])); dot2.setAttribute('opacity', 1);
+      if (growthVals[i] !== null) {
+        dot3.setAttribute('cx', x); dot3.setAttribute('cy', yScale(growthVals[i])); dot3.setAttribute('opacity', 1);
+      } else {
+        dot3.setAttribute('opacity', 0);
+      }
+
+      const d = data[i];
+      const growthRow = d.gdp_growth_pct !== null
+        ? `<div class="tt-row"><span><span class="tt-dot" style="background:var(--series-3)"></span>GDP growth</span><span>${d.gdp_growth_pct.toFixed(1)}%</span></div>`
+        : '';
+      tooltip.innerHTML = `<span class="tt-year">${d.year}</span>
+        <div class="tt-row"><span><span class="tt-dot" style="background:var(--series-2)"></span>Deficit</span><span>${d.deficit_pct_gdp.toFixed(1)}% GDP</span></div>
+        ${growthRow}`;
+      tooltip.style.opacity = 1;
+      const cw = container.clientWidth;
+      const px = (x / W) * cw;
+      let left = px + 14;
+      if (left + 150 > cw) left = px - 150;
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = '4px';
+    }
+    function handleLeave() {
+      crosshair.setAttribute('opacity', 0);
+      dot2.setAttribute('opacity', 0);
+      dot3.setAttribute('opacity', 0);
+      tooltip.style.opacity = 0;
+    }
+    overlay.addEventListener('mousemove', handleMove);
+    overlay.addEventListener('mouseleave', handleLeave);
+    overlay.addEventListener('touchmove', handleMove);
+    overlay.addEventListener('touchend', handleLeave);
+  }
+
+  // ---------- Chart 3: 3% eligibility rule (bar per year) ----------
+  function buildChart3() {
+    const svg = document.getElementById('chart3');
+    const tooltip = document.getElementById('tooltip3');
+    const W = 1000, H = 260;
+    const marginL = 46, marginR = 16, marginT = 12, marginB = 30;
+    const plotW = W - marginL - marginR;
+    const plotH = H - marginT - marginB;
+    const THRESHOLD = 3;
+
+    const years = data.map(d => d.year);
+    const vals = data.map(d => d.deficit_pct_gdp);
+    const yMin = Math.min(0, Math.min(...vals)) - 2;
+    const yMax = Math.max(...vals) + 3;
+
+    const barW = plotW / years.length;
+    const xScale = i => marginL + i * barW;
+    const yScale = v => marginT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+    const zy = yScale(0);
+
+    let svgContent = '';
+    const step = 10;
+    for (let v = Math.ceil(yMin / step) * step; v <= yMax; v += step) {
+      const y = yScale(v);
+      svgContent += `<line class="grid-line" x1="${marginL}" x2="${W - marginR}" y1="${y}" y2="${y}"></line>`;
+      svgContent += `<text x="${marginL - 8}" y="${y + 3}" text-anchor="end">${v}%</text>`;
+    }
+    for (let i = 0; i < years.length; i++) {
+      if (years[i] % 25 === 0) {
+        const x = xScale(i) + barW / 2;
+        svgContent += `<line class="grid-line" x1="${x}" x2="${x}" y1="${marginT}" y2="${H - marginB}"></line>`;
+        svgContent += `<text x="${x}" y="${H - marginB + 16}" text-anchor="middle">${years[i]}</text>`;
+      }
+    }
+
+    // bars, colored by threshold — drawn before the zero/threshold lines so the lines sit on top
+    for (let i = 0; i < years.length; i++) {
+      const v = vals[i];
+      const eligible = v <= THRESHOLD;
+      const y0 = yScale(0);
+      const y1 = yScale(v);
+      const top = Math.min(y0, y1);
+      const h = Math.max(1, Math.abs(y1 - y0));
+      const color = eligible ? 'var(--success)' : 'var(--critical)';
+      const gap = Math.max(0.4, barW * 0.12);
+      svgContent += `<rect data-i="${i}" x="${(xScale(i) + gap / 2).toFixed(2)}" y="${top.toFixed(2)}" width="${Math.max(0.5, barW - gap).toFixed(2)}" height="${h.toFixed(2)}" fill="${color}"></rect>`;
+    }
+
+    // zero baseline
+    svgContent += `<line class="axis-line" x1="${marginL}" x2="${W - marginR}" y1="${zy}" y2="${zy}"></line>`;
+    // 3% threshold reference line
+    const ty = yScale(THRESHOLD);
+    svgContent += `<line x1="${marginL}" x2="${W - marginR}" y1="${ty}" y2="${ty}" stroke="var(--text-primary)" stroke-width="1.25" stroke-dasharray="5 3" opacity="0.55"></line>`;
+    svgContent += `<text x="${W - marginR}" y="${ty - 5}" text-anchor="end" style="font-weight:600">3% threshold</text>`;
+
+    svg.innerHTML = svgContent + `<line id="ch3-crosshair" class="crosshair" x1="0" x2="0" y1="${marginT}" y2="${H - marginB}"></line>`;
+
+    const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    overlay.setAttribute('x', marginL); overlay.setAttribute('y', marginT);
+    overlay.setAttribute('width', plotW); overlay.setAttribute('height', plotH);
+    overlay.setAttribute('fill', 'transparent');
+    svg.appendChild(overlay);
+
+    const crosshair = document.getElementById('ch3-crosshair');
+    const container = document.getElementById('chart3-container');
+
+    function handleMove(evt) {
+      const rect = svg.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const relX = (clientX - rect.left) / rect.width * W;
+      let i = Math.floor((relX - marginL) / barW);
+      i = Math.max(0, Math.min(years.length - 1, i));
+      const x = xScale(i) + barW / 2;
+      crosshair.setAttribute('x1', x); crosshair.setAttribute('x2', x); crosshair.setAttribute('opacity', 1);
+
+      const v = vals[i];
+      const eligible = v <= THRESHOLD;
+      tooltip.innerHTML = `<span class="tt-year">${years[i]}</span>
+        <div class="tt-row"><span><span class="tt-dot" style="background:${eligible ? 'var(--success)' : 'var(--critical)'}"></span>Deficit</span><span>${v > 0 ? '+' : ''}${v.toFixed(1)}% GDP</span></div>
+        <div class="tt-row"><span>${eligible ? 'Eligible' : 'Ineligible'}</span><span></span></div>`;
+      tooltip.style.opacity = 1;
+      const cw = container.clientWidth;
+      const px = (x / W) * cw;
+      let left = px + 14;
+      if (left + 150 > cw) left = px - 150;
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = '4px';
+    }
+    function handleLeave() {
+      crosshair.setAttribute('opacity', 0);
+      tooltip.style.opacity = 0;
+    }
+    overlay.addEventListener('mousemove', handleMove);
+    overlay.addEventListener('mouseleave', handleLeave);
+    overlay.addEventListener('touchmove', handleMove);
+    overlay.addEventListener('touchend', handleLeave);
+
+    // summary stats below the chart
+    const eligibleCount = vals.filter(v => v <= THRESHOLD).length;
+    const ineligibleCount = years.length - eligibleCount;
+    // longest current streak ending in the last year, and longest streak overall, of ineligible years
+    let longestStreak = { start: null, end: null, len: 0 };
+    let curStart = null;
+    for (let i = 0; i < years.length; i++) {
+      if (vals[i] > THRESHOLD) {
+        if (curStart === null) curStart = years[i];
+        const len = years[i] - curStart + 1;
+        if (len > longestStreak.len) longestStreak = { start: curStart, end: years[i], len };
+      } else {
+        curStart = null;
+      }
+    }
+    const lastYear = years[years.length - 1];
+    let currentStreakLen = 0;
+    for (let i = years.length - 1; i >= 0 && vals[i] > THRESHOLD; i--) currentStreakLen++;
+    const currentStreakStart = currentStreakLen > 0 ? lastYear - currentStreakLen + 1 : null;
+
+    document.getElementById('rule-stats').innerHTML =
+      `<strong>${eligibleCount}</strong> of ${years.length} years (${(eligibleCount / years.length * 100).toFixed(0)}%) would have been under the 3% threshold. ` +
+      `Longest ineligible run: <strong>${longestStreak.start}&ndash;${longestStreak.end}</strong> (${longestStreak.len} years). ` +
+      (currentStreakLen > 0 ? `Current run: <strong>${currentStreakStart}&ndash;${lastYear}</strong> and counting (${currentStreakLen} years) — every sitting legislator would presently be ineligible.` : '');
+  }
+
+  // ---------- Table ----------
+  function buildTable() {
+    const tbody = document.getElementById('table-body');
+    const fmt = (v, digits) => v === null || v === undefined ? '—' : v.toFixed(digits);
+    const fmtSigned = (v, digits) => {
+      if (v === null || v === undefined) return '—';
+      const cls = v > 0 ? 'pos' : (v < 0 ? 'neg' : '');
+      const sign = v > 0 ? '+' : '';
+      return `<span class="${cls}">${sign}${v.toFixed(digits)}</span>`;
+    };
+    let html = '';
+    for (const d of data) {
+      html += `<tr>
+        <td>${d.year}</td>
+        <td>${fmt(d.gdp_billion, d.gdp_billion < 100 ? 2 : 1)}</td>
+        <td>${fmtSigned(d.gdp_growth_pct, 1)}</td>
+        <td>${fmt(d.debt_billion, d.debt_billion < 100 ? 2 : 1)}</td>
+        <td>${fmt(d.debt_pct_gdp, 1)}%</td>
+        <td>${fmtSigned(d.debt_yoy_pct, 1)}${d.debt_yoy_pct !== null ? '%' : ''}</td>
+        <td>${fmtSigned(d.deficit_billion, 2)}</td>
+        <td>${fmtSigned(d.deficit_pct_gdp, 2)}%</td>
+      </tr>`;
+    }
+    tbody.innerHTML = html;
+  }
+
+  // ---------- Why-explainer ----------
+  function buildWhyExplainer() {
+    const d = {};
+    data.forEach(r => d[r.year] = r);
+    const y2000 = d[2000], y2025 = d[2025];
+    const fmtT = v => '$' + (v / 1000).toFixed(1) + 'T';
+    const debtMultiple = (y2025.debt_billion / y2000.debt_billion).toFixed(1);
+    const gdpMultiple = (y2025.gdp_billion / y2000.gdp_billion).toFixed(1);
+
+    const periods = [
+      [2000, 2007, 'Dot-com bust, tax cuts, two wars'],
+      [2008, 2009, 'Financial crisis + TARP + stimulus'],
+      [2010, 2019, 'Slow recovery, 2017 tax cuts, rising interest cost'],
+      [2020, 2021, 'COVID-19 emergency spending'],
+      [2022, 2025, 'Inflation, rate hikes, interest expense'],
+    ];
+    let periodRows = '';
+    periods.forEach(([a, b, label]) => {
+      let avg = 0, n = 0;
+      for (let y = a; y <= b; y++) { avg += d[y].deficit_pct_gdp; n++; }
+      avg /= n;
+      const debtStart = d[a - 1] ? d[a - 1].debt_billion : d[a].debt_billion;
+      const debtEnd = d[b].debt_billion;
+      periodRows += `<tr><td>${a}&ndash;${b}<div style="color:var(--text-muted);font-weight:400">${label}</div></td>
+        <td>${avg.toFixed(1)}%</td>
+        <td>+$${(debtEnd - debtStart).toLocaleString(undefined, {maximumFractionDigits:0})}B</td></tr>`;
+    });
+
+    document.getElementById('why-explainer').innerHTML = `
+      <div class="explainer">
+        <div class="stat-row">
+          <div class="stat-tile">
+            <div class="stat-label">Public debt, 2000 &rarr; 2025</div>
+            <div class="stat-value">${debtMultiple}&times;</div>
+            <div class="stat-sub">${fmtT(y2000.debt_billion)} &rarr; ${fmtT(y2025.debt_billion)}</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">GDP, 2000 &rarr; 2025</div>
+            <div class="stat-value">${gdpMultiple}&times;</div>
+            <div class="stat-sub">${fmtT(y2000.gdp_billion)} &rarr; ${fmtT(y2025.gdp_billion)}</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">Debt/GDP, 2000 &rarr; 2025</div>
+            <div class="stat-value">${y2000.debt_pct_gdp.toFixed(0)}% &rarr; ${y2025.debt_pct_gdp.toFixed(0)}%</div>
+            <div class="stat-sub">debt grew ~${(debtMultiple / gdpMultiple).toFixed(1)}&times; faster than GDP</div>
+          </div>
+        </div>
+        <p><strong>1. It's compounding, not any single bad year.</strong> No year since 2000 has come close to the WWII peak of 29% of GDP in a single year — the worst was 2020's COVID spike at 14.5%. But deficits ran positive in 22 of the last 26 years, and even "moderate" 3&ndash;6% annual deficits compound: on a $20&ndash;30 trillion GDP base, 4% a year is $800B&ndash;$1.2T of new borrowing annually, year after year, largely uninterrupted by surpluses (the last surplus years were 1998&ndash;2001).</p>
+        <table class="period-table">
+          <thead><tr><th>Period</th><th>Avg. annual deficit, % GDP</th><th>Debt added</th></tr></thead>
+          <tbody>${periodRows}</tbody>
+        </table>
+        <p><strong>2. Interest is now feeding on itself.</strong> As debt piled up through the 2010s while rates were near zero, interest cost stayed manageable. Since 2022's rate hikes, net interest on the debt has become one of the largest line items in the federal budget — a bill that has to be paid regardless of any other policy choice, and one that grows the debt further even in years with no other new commitments. That's the compounding-interest mechanism showing up at national scale: the deficit doesn't have to look dramatic in a data table for the debt to keep re-accelerating underneath it.</p>
+      </div>`;
+  }
+
+  buildChart1();
+  buildChart2();
+  buildChart3();
+  buildTable();
+  buildWhyExplainer();
+})();
+</script>
