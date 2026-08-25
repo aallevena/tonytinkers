@@ -87,27 +87,9 @@ h1 { font-size: 1.5rem; margin: 0 0 14px; letter-spacing: -0.01em; }
 
 .intro-card {
   padding-bottom: 20px;
-  display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: 0 32px;
-  align-items: start;
+  max-width: 74ch;
 }
-.intro-card .intro-note {
-  max-width: none;
-  margin: 0;
-  padding: 0 32px 0 0;
-  border-bottom: none;
-  border-right: 1px solid var(--border);
-}
-.intro-card .subtitle { margin: 0; max-width: none; }
-@media (max-width: 720px) {
-  .intro-card { grid-template-columns: 1fr; }
-  .intro-card .intro-note {
-    padding: 0 0 18px;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
+.intro-card .subtitle { margin-bottom: 0; }
 
 .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 10px; font-size: 0.8rem; color: var(--text-secondary); }
 .legend-item { display: flex; align-items: center; gap: 6px; }
