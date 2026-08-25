@@ -96,7 +96,23 @@
     border-bottom:1.5px solid var(--ink);
     padding-bottom:22px;
     margin-bottom:10px;
+    flex-wrap:wrap;
   }
+  .site-nav{
+    display:flex;
+    gap:18px;
+    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-size:12.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+  }
+  .site-nav a{
+    color:var(--ink-soft);
+    text-decoration:none;
+    border-bottom:1px solid transparent;
+    padding-bottom:2px;
+  }
+  .site-nav a:hover, .site-nav a:focus-visible{ color:var(--accent); border-bottom-color:var(--accent); }
   .nameplate{
     font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
     font-size:clamp(34px, 5.5vw, 50px);
@@ -287,6 +303,10 @@
 
   <header class="site">
     <h1 class="nameplate">Tony <span>Tinkers</span></h1>
+    <nav class="site-nav">
+      <a href="/onechange">One Change</a>
+      <a href="/bythenumbers">By the Numbers</a>
+    </nav>
     <div class="site-meta">
       tonytinkers.com<br>
       workshop log — updated 2026-08-10
